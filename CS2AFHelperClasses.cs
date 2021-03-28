@@ -15,10 +15,42 @@ namespace PlayFab.Samples
     // Models  via ExecuteFunction API
     public class FunctionExecutionContext<T>
     {
+        public PlayFab.PlayFabApiSettings ApiSettings { 
+            get {
+                return new PlayFabApiSettings(){
+                    TitleId = TitleAuthenticationContext.Id,
+                    DeveloperSecretKey = Environment.GetEnvironmentVariable("PLAYFAB_DEV_SECRET_KEY", EnvironmentVariableTarget.Process),
+                };
+            } 
+            set {
+                ApiSettings = value;
+            }
+        }
+        public PlayFab.PlayFabAuthenticationContext AuthenticationContext { 
+            get {
+                return new PlayFabAuthenticationContext(){
+                    EntityToken = TitleAuthenticationContext.EntityToken,
+                };
+            } 
+            set {
+                AuthenticationContext = value;
+            }
+        }
         public PlayFab.ProfilesModels.EntityProfileBody CallerEntityProfile { get; set; }
         public TitleAuthenticationContext TitleAuthenticationContext { get; set; }
         public bool? GeneratePlayStreamEvent { get; set; }
         public T FunctionArgument { get; set; }
+
+        public void Init(){
+            ApiSettings = new PlayFabApiSettings(){
+                TitleId = TitleAuthenticationContext.Id,
+                DeveloperSecretKey = Environment.GetEnvironmentVariable("PLAYFAB_DEV_SECRET_KEY", EnvironmentVariableTarget.Process),
+            };
+
+            AuthenticationContext = new PlayFabAuthenticationContext(){
+                EntityToken = TitleAuthenticationContext.EntityToken,
+            };
+        }
     }
 
     public class FunctionExecutionContext : FunctionExecutionContext<object>
