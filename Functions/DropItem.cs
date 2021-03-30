@@ -27,8 +27,8 @@ namespace SANGWOO.Function
 
         // 引数でテーブル名を渡す
         dynamic dropTableName = null;
-        if (args != null && args["DropTableName"] != null)
-            dropTableName = args["DropTableName"];
+        if (args != null && args["dropTableName"] != null)
+            dropTableName = args["dropTableName"];
 
         // ドロップテーブルからアイテムを取得する
         var evaluateResult = await EvaluateRandomResultTable(context, dropTableName);
