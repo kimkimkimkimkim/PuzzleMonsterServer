@@ -1,7 +1,4 @@
-using System;
-using System.IO;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
@@ -11,6 +8,7 @@ using System.Collections.Generic;
 using PlayFab.Json;
 using PlayFab.Samples;
 using PlayFab;
+using PlayFab.ServerModels;
 
 namespace SANGWOO.Function
 {
@@ -21,46 +19,48 @@ namespace SANGWOO.Function
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
         ILogger log)
         {
-        string body = await req.ReadAsStringAsync();
-        var context = JsonConvert.DeserializeObject<FunctionExecutionContext<dynamic>>(body);
-        var args = context.FunctionArgument;
+            string body = await req.ReadAsStringAsync();
+            var context = JsonConvert.DeserializeObject<FunctionExecutionContext<dynamic>>(body);
+            var args = context.FunctionArgument;
 
-        // 引数でテーブル名を渡す
-        dynamic dropTableName = null;
-        if (args != null && args["dropTableName"] != null)
-            dropTableName = args["dropTableName"];
+            // 引数でテーブル名を渡す
+            dynamic dropTableName = null;
+            if (args != null && args["dropTableName"] != null)
+                dropTableName = args["dropTableName"];
 
-        // ドロップテーブルからアイテムを取得する
-        var evaluateResult = await EvaluateRandomResultTable(context, dropTableName);
-        // プレイヤーにアイテムを付与する
-        var grantResult = await GrantItemsToUser(context, new List<string>() { evaluateResult });
+            // ドロップテーブルからアイテムを取得する
+            var evaluateResult = await EvaluateRandomResultTable(context, dropTableName);
+            // プレイヤーにアイテムを付与する
+            var grantResult = await GrantItemsToUser(context, new List<string>() { evaluateResult });
 
-        return PlayFabSimpleJson.SerializeObject(grantResult);
+            return PlayFabSimpleJson.SerializeObject(grantResult);
         }
 
+        // ドロップテーブルから取得するアイテムを抽選
         private static async Task<string> EvaluateRandomResultTable(FunctionExecutionContext<dynamic> context, dynamic dropTableName)
         {
-        var serverApi = new PlayFabServerInstanceAPI(context.ApiSettings,context.AuthenticationContext);
+            var serverApi = new PlayFabServerInstanceAPI(context.ApiSettings,context.AuthenticationContext);
 
-        var result = await serverApi.EvaluateRandomResultTableAsync(new PlayFab.ServerModels.EvaluateRandomResultTableRequest()
-        {
-            TableId = dropTableName
-        });
+            var result = await serverApi.EvaluateRandomResultTableAsync(new EvaluateRandomResultTableRequest()
+            {
+                TableId = dropTableName
+            });
 
-        return result.Result.ResultItemId;
+            return result.Result.ResultItemId;
         }
 
-        private static async Task<List<PlayFab.ServerModels.GrantedItemInstance>> GrantItemsToUser(FunctionExecutionContext<dynamic> context, List<string> itemIds)
+        // 取得したアイテムをユーザーのインベントリに追加
+        private static async Task<List<GrantedItemInstance>> GrantItemsToUser(FunctionExecutionContext<dynamic> context, List<string> itemIds)
         {
-        var serverApi = new PlayFabServerInstanceAPI(context.ApiSettings,context.AuthenticationContext);
+            var serverApi = new PlayFabServerInstanceAPI(context.ApiSettings,context.AuthenticationContext);
 
-        var result = await serverApi.GrantItemsToUserAsync(new PlayFab.ServerModels.GrantItemsToUserRequest()
-        {
-            PlayFabId = context.CallerEntityProfile.Lineage.MasterPlayerAccountId,
-            ItemIds = itemIds
-        });
+            var result = await serverApi.GrantItemsToUserAsync(new GrantItemsToUserRequest()
+            {
+                PlayFabId = context.CallerEntityProfile.Lineage.MasterPlayerAccountId,
+                ItemIds = itemIds
+            });
 
-        return result.Result.ItemGrantResults;
+            return result.Result.ItemGrantResults;
         }
     }
 }
