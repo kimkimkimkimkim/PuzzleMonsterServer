@@ -40,17 +40,6 @@ namespace PlayFab.Samples
         public TitleAuthenticationContext TitleAuthenticationContext { get; set; }
         public bool? GeneratePlayStreamEvent { get; set; }
         public T FunctionArgument { get; set; }
-
-        public void Init(){
-            ApiSettings = new PlayFabApiSettings(){
-                TitleId = TitleAuthenticationContext.Id,
-                DeveloperSecretKey = Environment.GetEnvironmentVariable("PLAYFAB_DEV_SECRET_KEY", EnvironmentVariableTarget.Process),
-            };
-
-            AuthenticationContext = new PlayFabAuthenticationContext(){
-                EntityToken = TitleAuthenticationContext.EntityToken,
-            };
-        }
     }
 
     public class FunctionExecutionContext : FunctionExecutionContext<object>

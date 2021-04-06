@@ -20,7 +20,7 @@ namespace SANGWOO.Function
             ILogger log)
         {
             string body = await req.ReadAsStringAsync();
-            var context = JsonConvert.DeserializeObject<FunctionExecutionContext<dynamic>>(body);
+            var context = JsonConvert.DeserializeObject<FunctionExecutionContext<Dictionary<string,List<string>>>>(body);
             var args = context.FunctionArgument;
 
             // 引数でテーブル名を渡す
@@ -34,14 +34,14 @@ namespace SANGWOO.Function
         }
 
         // ドロップテーブルから取得するアイテムを抽選
-        private static async Task<List<GrantedItemInstance>> GrantItemsToUserTask(FunctionExecutionContext<dynamic> context, dynamic itemIdList)
+        private static async Task<List<GrantedItemInstance>> GrantItemsToUserTask(FunctionExecutionContext<Dictionary<string,List<string>>> context, dynamic itemIdList)
         {
             var serverApi = new PlayFabServerInstanceAPI(context.ApiSettings,context.AuthenticationContext);
 
             var result = await serverApi.GrantItemsToUserAsync(new GrantItemsToUserRequest()
             {
                 PlayFabId = context.CallerEntityProfile.Lineage.MasterPlayerAccountId,
-                ItemIds = itemIdList,
+                ItemIds = itemIdList
             });
 
             return result.Result.ItemGrantResults;
