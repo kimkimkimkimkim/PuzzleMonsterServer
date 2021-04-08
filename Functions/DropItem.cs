@@ -16,8 +16,8 @@ namespace SANGWOO.Function
     {
         [FunctionName("DropItem")]
         public static async Task<dynamic> Run(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
-        ILogger log)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
+            ILogger log)
         {
             string body = await req.ReadAsStringAsync();
             var context = JsonConvert.DeserializeObject<FunctionExecutionContext<dynamic>>(body);
@@ -31,7 +31,7 @@ namespace SANGWOO.Function
             // ドロップテーブルからアイテムを取得する
             var evaluateResult = await EvaluateRandomResultTable(context, dropTableName);
             // プレイヤーにアイテムを付与する
-            var grantResult = await GrantItemsToUser(context, new List<string>() { evaluateResult });
+            var grantResult = await ItemGiver.GrantItemsToUserAsync(context, new List<string>() { evaluateResult });
 
             return PlayFabSimpleJson.SerializeObject(grantResult);
         }
@@ -47,20 +47,6 @@ namespace SANGWOO.Function
             });
 
             return result.Result.ResultItemId;
-        }
-
-        // 取得したアイテムをユーザーのインベントリに追加
-        private static async Task<List<GrantedItemInstance>> GrantItemsToUser(FunctionExecutionContext<dynamic> context, List<string> itemIds)
-        {
-            var serverApi = new PlayFabServerInstanceAPI(context.ApiSettings,context.AuthenticationContext);
-
-            var result = await serverApi.GrantItemsToUserAsync(new GrantItemsToUserRequest()
-            {
-                PlayFabId = context.CallerEntityProfile.Lineage.MasterPlayerAccountId,
-                ItemIds = itemIds
-            });
-
-            return result.Result.ItemGrantResults;
         }
     }
 }
