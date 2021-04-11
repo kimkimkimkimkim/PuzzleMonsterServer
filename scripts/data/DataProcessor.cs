@@ -20,8 +20,7 @@ public static class DataProcessor
         });
 
         // ユーザーデータのパラム名とそのデータのJsonの辞書にしてユーザーデータを取得
-        var dict = result.Result.Data.ToDictionary(kvp => kvp.Key,kvp => kvp.Value.Value);
-        var userData = UserDataUtil.GetUserData(dict);
+        var userData = UserDataUtil.GetUserData(result.Result.Data);
         
         return userData;
     }
