@@ -29,8 +29,11 @@ namespace SANGWOO.Function
 
             // ドロップテーブルからアイテムを取得する
             var grantedItemList = await GrantItemsToUserTask(context, itemIdList);
-
-            return PlayFabSimpleJson.SerializeObject(grantedItemList);
+            // レンポンスの作成
+            var response = new GrantItemsToUserApiResponse(){
+                itemInstanceList = grantedItemList,
+            };
+            return PlayFabSimpleJson.SerializeObject(response);
         }
 
         // ドロップテーブルから取得するアイテムを抽選

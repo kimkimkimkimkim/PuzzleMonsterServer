@@ -32,8 +32,11 @@ namespace SANGWOO.Function
             var evaluateResult = await EvaluateRandomResultTable(context, dropTableName);
             // プレイヤーにアイテムを付与する
             var grantResult = await ItemGiver.GrantItemsToUserAsync(context, new List<string>() { evaluateResult });
-
-            return PlayFabSimpleJson.SerializeObject(grantResult);
+            // レスポンスの作成
+            var response = new DropItemApiResponse(){
+                itemInstanceList = grantResult,
+            };
+            return PlayFabSimpleJson.SerializeObject(response);
         }
 
         // ドロップテーブルから取得するアイテムを抽選
