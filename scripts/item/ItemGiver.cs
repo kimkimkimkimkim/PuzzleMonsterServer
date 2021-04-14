@@ -15,6 +15,8 @@ public static class ItemGiver
     {
         var serverApi = new PlayFabServerInstanceAPI(context.ApiSettings,context.AuthenticationContext);
 
+        // アイテム付与前のインベントリ情報を保持しておく
+        var beforeUserInventory = await DataProcessor.GetUserInventoryAsync(context);
         var result = await serverApi.GrantItemsToUserAsync(new GrantItemsToUserRequest()
         {
             PlayFabId = context.CallerEntityProfile.Lineage.MasterPlayerAccountId,
@@ -26,13 +28,14 @@ public static class ItemGiver
         var monsterList = grantedItemList.Where(i => ItemUtil.GetItemType(i) == ItemType.Monster).ToList();
         if(monsterList.Any()){
             var monsterMasterList = await DataProcessor.GetMasterAsyncOf<MonsterMB>(context);
-            var userInventory = await DataProcessor.GetUserInventoryAsync(context);
-            var notHaveMonsterList = monsterList.Where(i => !userInventory.userMonsterList.Any(u => u.monsterId == ItemUtil.GetItemId(i))).ToList();
+            var notHaveMonsterList = monsterList.Where(i => !beforeUserInventory.userMonsterList.Any(u => u.monsterId == ItemUtil.GetItemId(i))).ToList();
             
             // 未所持のモンスターデータを作成する
             foreach(var itemInstance in notHaveMonsterList){
                 var monster = monsterMasterList.First(m => m.id == ItemUtil.GetItemId(itemInstance));
                 var customData = new UserMonsterCustomData(){
+                    level = 1,
+                    exp = 0,
                     hp = 0,
                     attack = 0,
                     grade = monster.initialGrade,

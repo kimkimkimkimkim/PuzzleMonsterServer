@@ -19,24 +19,33 @@ namespace SANGWOO.Function
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            string body = await req.ReadAsStringAsync();
-            var context = JsonConvert.DeserializeObject<FunctionExecutionContext<dynamic>>(body);
-            var args = context.FunctionArgument;
+            try{
+                string body = await req.ReadAsStringAsync();
+                var context = JsonConvert.DeserializeObject<FunctionExecutionContext<dynamic>>(body);
+                var args = context.FunctionArgument;
 
-            // 引数でテーブル名を渡す
-            dynamic dropTableName = null;
-            if (args != null && args["dropTableName"] != null)
-                dropTableName = args["dropTableName"];
+                // 引数でテーブル名を渡す
+                dynamic dropTableName = null;
+                if (args != null && args["dropTableName"] != null)
+                    dropTableName = args["dropTableName"];
 
-            // ドロップテーブルからアイテムを取得する
-            var evaluateResult = await EvaluateRandomResultTable(context, dropTableName);
-            // プレイヤーにアイテムを付与する
-            var grantResult = await ItemGiver.GrantItemsToUserAsync(context, new List<string>() { evaluateResult });
-            // レスポンスの作成
-            var response = new DropItemApiResponse(){
-                itemInstanceList = grantResult,
-            };
-            return PlayFabSimpleJson.SerializeObject(response);
+                // ドロップテーブルからアイテムを取得する
+                var evaluateResult = await EvaluateRandomResultTable(context, dropTableName);
+                // プレイヤーにアイテムを付与する
+                var grantResult = await ItemGiver.GrantItemsToUserAsync(context, new List<string>() { evaluateResult });
+                // レスポンスの作成
+                var response = new DropItemApiResponse(){
+                    itemInstanceList = grantResult,
+                };
+                return PlayFabSimpleJson.SerializeObject(response);
+            }catch(PMApiException e){
+                // レスポンスの作成
+                var response = new DropItemApiResponse(){
+                    errorCode = e.erroCode,
+                    message = e.message
+                };
+                return PlayFabSimpleJson.SerializeObject(response);
+            }
         }
 
         // ドロップテーブルから取得するアイテムを抽選
