@@ -25,6 +25,20 @@ public static class DataProcessor
         return userData;
     }
 
+    // ユーザーインベントリ情報を取得する
+    public static async Task<UserInventoryInfo> GetUserInventoryAsync(FunctionExecutionContext<dynamic> context){
+        var serverApi = new PlayFabServerInstanceAPI(context.ApiSettings,context.AuthenticationContext);
+
+        var result = await serverApi.GetUserInventoryAsync(new GetUserInventoryRequest()
+        {
+            PlayFabId = context.CallerEntityProfile.Lineage.MasterPlayerAccountId,
+        });
+
+        var userInventory = UserDataUtil.GetUserInventory(result.Result);
+        
+        return userInventory;
+    }
+
     // マスタデータを取得する
     public static async Task<List<T>> GetMasterAsyncOf<T>(FunctionExecutionContext<dynamic> context) where T : MasterBookBase{
         var serverApi = new PlayFabServerInstanceAPI(context.ApiSettings,context.AuthenticationContext);
@@ -49,6 +63,18 @@ public static class DataProcessor
         var result = await serverApi.UpdateUserDataAsync(new UpdateUserDataRequest(){
             PlayFabId = context.CallerEntityProfile.Lineage.MasterPlayerAccountId,
             Data = data,
+        });
+    }
+
+    // 指定したアイテムのカスタムデータを更新
+    public static async Task UpdateUserInventoryCustomData(FunctionExecutionContext<dynamic> context,string itemInstanceId,UserMonsterCustomData customData){
+        var serverApi = new PlayFabServerInstanceAPI(context.ApiSettings,context.AuthenticationContext);
+        
+        var customDataDict = UserDataUtil.GetCustomDataDict(customData);
+        var result = await serverApi.UpdateUserInventoryItemCustomDataAsync(new UpdateUserInventoryItemDataRequest(){
+            PlayFabId = context.CallerEntityProfile.Lineage.MasterPlayerAccountId,
+            ItemInstanceId = itemInstanceId,
+            Data = customDataDict,
         });
     }
 }

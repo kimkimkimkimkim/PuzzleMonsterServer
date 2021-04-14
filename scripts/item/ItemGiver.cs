@@ -22,34 +22,23 @@ public static class ItemGiver
         });
         var grantedItemList = result.Result.ItemGrantResults;
 
-        // 付与したアイテムが未所持モンスターだった場合新規でユーザーデータを作成し追加
-        var monsterMasterList = await DataProcessor.GetMasterAsyncOf<MonsterMB>(context);
-        var userData = await DataProcessor.GetUserDataAsync(context);
+        // 付与したアイテムが未所持モンスターだった場合新規でモンスターデータを作成し追加
         var monsterList = grantedItemList.Where(i => ItemUtil.GetItemType(i) == ItemType.Monster).ToList();
-        var existsNotHave = false; // 未所持のモンスターが付与されたかどうかを判定するフラグ
-        monsterList.ForEach(i => {
-            var isNotHave = !userData.userMonsterList.Any(u => u.monsterId == ItemUtil.GetItemId(i));
-            if(isNotHave){
-                existsNotHave = true;
-
-                // 未所持ならユーザーデータを作成する
-                var monster = monsterMasterList.First(m => m.id == ItemUtil.GetItemId(i));
-                var userMonster = new UserMonsterInfo(){
-                    id = UserDataUtil.CreateUserDataId(),
-                    monsterId = ItemUtil.GetItemId(i),
+        if(monsterList.Any()){
+            var monsterMasterList = await DataProcessor.GetMasterAsyncOf<MonsterMB>(context);
+            var userInventory = await DataProcessor.GetUserInventoryAsync(context);
+            var notHaveMonsterList = monsterList.Where(i => !userInventory.userMonsterList.Any(u => u.monsterId == ItemUtil.GetItemId(i))).ToList();
+            
+            // 未所持のモンスターデータを作成する
+            foreach(var itemInstance in notHaveMonsterList){
+                var monster = monsterMasterList.First(m => m.id == ItemUtil.GetItemId(itemInstance));
+                var customData = new UserMonsterCustomData(){
                     hp = 0,
                     attack = 0,
                     grade = monster.initialGrade,
                 };
-                userData.userMonsterList.Add(userMonster);
+                await DataProcessor.UpdateUserInventoryCustomData(context, itemInstance.ItemInstanceId,customData);
             }
-        });
-
-        // 未所持モンスターが付与されていればユーザーデータを更新
-        if(existsNotHave){
-            await DataProcessor.UpdateUserDataAsync(context, new Dictionary<UserDataKey, object>(){
-                {UserDataKey.userMonsterList, userData.userMonsterList}
-            });
         }
 
         return grantedItemList;

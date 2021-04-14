@@ -25,13 +25,13 @@ namespace SANGWOO.Function
             var request = JsonConvert.DeserializeObject<FunctionExecutionContext<MonsterLevelUpApiRequest>>(body).FunctionArgument;
 
             // 対象のモンスターを取得
-            var userData = await DataProcessor.GetUserDataAsync(context);
-            var userMonster = userData.userMonsterList.FirstOrDefault(u => u.id == request.userMonsterId);
+            var userInventory = await DataProcessor.GetUserInventoryAsync(context);
+            var userMonster = userInventory.userMonsterList.FirstOrDefault(u => u.id == request.userMonsterId);
             if(userMonster == null) throw new System.Exception();
 
             // 何レベになるか計算
             var levelUpTableList = await DataProcessor.GetMasterAsyncOf<MonsterLevelUpTableMB>(context);
-            var afterExp = userMonster.exp + request.exp;
+            var afterExp = userMonster.customData.exp + request.exp;
             var targetLevelUpTable = levelUpTableList.OrderBy(m => m.id).FirstOrDefault(m => m.totalRequiredExp >= afterExp);
             if(targetLevelUpTable == null) throw new System.Exception();
             var afterLevel = targetLevelUpTable.level;
