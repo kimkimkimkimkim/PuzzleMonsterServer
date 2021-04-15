@@ -42,10 +42,20 @@ namespace SANGWOO.Function
                 PMApiUtil.ErrorIf(targetLevelUpTable == null, PMErrorCode.Unknown, "invalid levelUpTable");
                 var afterLevel = targetLevelUpTable.level;
 
+                // 対象のモンスターがマスタに存在するかチェック
+                var monsterList = await DataProcessor.GetMasterAsyncOf<MonsterMB>(context);
+                var monster = monsterList.FirstOrDefault(m => m.id == userMonster.monsterId);
+                PMApiUtil.ErrorIf(monster == null, PMErrorCode.Unknown, "invalie monsterId");
+
                 // モンスターをレベルアップ
-                var customData = userMonster.customData;
-                customData.exp = afterExp;
-                customData.level = afterLevel;
+                var afterStatus = MonsterUtil.GetMonsterStatus(monster, afterLevel);
+                var customData = new UserMonsterCustomData(){
+                    level = afterLevel,
+                    exp = afterExp,
+                    hp = afterStatus.hp,
+                    attack = afterStatus.attack,
+                    grade = userMonster.customData.grade,
+                };
                 await DataProcessor.UpdateUserMonsterCustomDataAsync(context, userMonster.id, customData);
 
                 // 経験値を消費
