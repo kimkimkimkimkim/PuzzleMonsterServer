@@ -10,6 +10,7 @@ using PlayFab.Samples;
 using PlayFab;
 using PlayFab.ServerModels;
 using System.Linq;
+using PM.Enum.Item;
 
 namespace SANGWOO.Function
 {
@@ -20,24 +21,47 @@ namespace SANGWOO.Function
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            string body = await req.ReadAsStringAsync();
-            var context = JsonConvert.DeserializeObject<FunctionExecutionContext<dynamic>>(body);
-            var request = JsonConvert.DeserializeObject<FunctionExecutionContext<MonsterLevelUpApiRequest>>(body).FunctionArgument;
+            try{
+                string body = await req.ReadAsStringAsync();
+                var context = JsonConvert.DeserializeObject<FunctionExecutionContext<dynamic>>(body);
+                var request = JsonConvert.DeserializeObject<FunctionExecutionContext<MonsterLevelUpApiRequest>>(body).FunctionArgument;
 
-            // 対象のモンスターを取得
-            var userInventory = await DataProcessor.GetUserInventoryAsync(context);
-            var userMonster = userInventory.userMonsterList.FirstOrDefault(u => u.id == request.userMonsterId);
-            if(userMonster == null) throw new System.Exception();
+                // 対象のモンスターを取得
+                var userInventory = await DataProcessor.GetUserInventoryAsync(context);
+                var userMonster = userInventory.userMonsterList.FirstOrDefault(u => u.id == request.userMonsterId);
+                PMApiUtil.ErrorIf(userMonster == null, PMErrorCode.Unknown, "invalid userMonsterId");
 
-            // 何レベになるか計算
-            var levelUpTableList = await DataProcessor.GetMasterAsyncOf<MonsterLevelUpTableMB>(context);
-            var afterExp = userMonster.customData.exp + request.exp;
-            var targetLevelUpTable = levelUpTableList.OrderBy(m => m.id).FirstOrDefault(m => m.totalRequiredExp >= afterExp);
-            if(targetLevelUpTable == null) throw new System.Exception();
-            var afterLevel = targetLevelUpTable.level;
+                // 経験値を十分に保持しているかチェック
+                var exp = userInventory.userPropertyList.FirstOrDefault(u => u.propertyId == (long)PropertyType.MonsterExp);
+                PMApiUtil.ErrorIf(exp == null || exp.num < request.exp,PMErrorCode.Unknown, "not enough exp");
 
-            var response = new MonsterLevelUpApiResponse(){ level = afterLevel };
-            return PlayFabSimpleJson.SerializeObject(response);
+                // 何レベになるか計算
+                var levelUpTableList = await DataProcessor.GetMasterAsyncOf<MonsterLevelUpTableMB>(context);
+                var afterExp = userMonster.customData.exp + request.exp;
+                var targetLevelUpTable = levelUpTableList.OrderBy(m => m.id).FirstOrDefault(m => m.totalRequiredExp >= afterExp);
+                PMApiUtil.ErrorIf(targetLevelUpTable == null, PMErrorCode.Unknown, "invalid levelUpTable");
+                var afterLevel = targetLevelUpTable.level;
+
+                // モンスターをレベルアップ
+                var customData = userMonster.customData;
+                customData.exp = afterExp;
+                customData.level = afterLevel;
+                await DataProcessor.UpdateUserMonsterCustomDataAsync(context, userMonster.id, customData);
+
+                // 経験値を消費
+                await DataProcessor.ConsumeItemAsync(context, exp.id, request.exp);
+
+                // 強化後のレベルを返す
+                var response = new MonsterLevelUpApiResponse(){ level = afterLevel };
+                return PlayFabSimpleJson.SerializeObject(response);
+            }catch(PMApiException e){
+                // レスポンスの作成
+                var response = new PMApiResponseBase(){
+                    errorCode = e.errorCode,
+                    message = e.message
+                };
+                return PlayFabSimpleJson.SerializeObject(response);
+            }
         }
 
         // ドロップテーブルから取得するアイテムを抽選

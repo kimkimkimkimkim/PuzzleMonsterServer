@@ -66,8 +66,8 @@ public static class DataProcessor
         });
     }
 
-    // 指定したアイテムのカスタムデータを更新
-    public static async Task UpdateUserInventoryCustomData(FunctionExecutionContext<dynamic> context,string itemInstanceId,UserMonsterCustomData customData){
+    // 指定したモンスターのカスタムデータを更新
+    public static async Task UpdateUserMonsterCustomDataAsync(FunctionExecutionContext<dynamic> context,string itemInstanceId,UserMonsterCustomData customData){
         var serverApi = new PlayFabServerInstanceAPI(context.ApiSettings,context.AuthenticationContext);
         
         var customDataDict = UserDataUtil.GetCustomDataDict(customData);
@@ -76,5 +76,17 @@ public static class DataProcessor
             ItemInstanceId = itemInstanceId,
             Data = customDataDict,
         });
+    }
+
+    // 指定したアイテムを消費します
+    public static async Task<ConsumeItemResult> ConsumeItemAsync(FunctionExecutionContext<dynamic> context,string itemInstanceId,int consumeCount){
+        var serverApi = new PlayFabServerInstanceAPI(context.ApiSettings,context.AuthenticationContext);
+        
+        var result = await serverApi.ConsumeItemAsync(new ConsumeItemRequest(){
+            PlayFabId = context.CallerEntityProfile.Lineage.MasterPlayerAccountId,
+            ItemInstanceId = itemInstanceId,
+            ConsumeCount = consumeCount,
+        });
+        return result.Result;
     }
 }

@@ -42,7 +42,7 @@ public static class ItemGiver
                     attack = status.attack,
                     grade = monster.initialGrade,
                 };
-                await DataProcessor.UpdateUserInventoryCustomData(context, itemInstance.ItemInstanceId,customData);
+                await DataProcessor.UpdateUserMonsterCustomDataAsync(context, itemInstance.ItemInstanceId,customData);
             }
         }
 

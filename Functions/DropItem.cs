@@ -40,8 +40,8 @@ namespace SANGWOO.Function
                 return PlayFabSimpleJson.SerializeObject(response);
             }catch(PMApiException e){
                 // レスポンスの作成
-                var response = new DropItemApiResponse(){
-                    errorCode = e.erroCode,
+                var response = new PMApiResponseBase(){
+                    errorCode = e.errorCode,
                     message = e.message
                 };
                 return PlayFabSimpleJson.SerializeObject(response);
