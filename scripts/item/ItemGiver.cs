@@ -32,12 +32,14 @@ public static class ItemGiver
             
             // 未所持のモンスターデータを作成する
             foreach(var itemInstance in notHaveMonsterList){
+                var level = 1;
                 var monster = monsterMasterList.First(m => m.id == ItemUtil.GetItemId(itemInstance));
+                var status = MonsterUtil.GetMonsterStatus(monster, level);
                 var customData = new UserMonsterCustomData(){
-                    level = 1,
+                    level = level,
                     exp = 0,
-                    hp = 0,
-                    attack = 0,
+                    hp = status.hp,
+                    attack = status.attack,
                     grade = monster.initialGrade,
                 };
                 await DataProcessor.UpdateUserInventoryCustomData(context, itemInstance.ItemInstanceId,customData);
