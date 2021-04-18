@@ -54,6 +54,7 @@ namespace SANGWOO.Function
                     exp = afterExp,
                     hp = afterStatus.hp,
                     attack = afterStatus.attack,
+                    heal = afterStatus.heal,
                     grade = userMonster.customData.grade,
                 };
                 await DataProcessor.UpdateUserMonsterCustomDataAsync(context, userMonster.id, customData);

@@ -40,6 +40,7 @@ public static class ItemGiver
                     exp = 0,
                     hp = status.hp,
                     attack = status.attack,
+                    heal = status.heal,
                     grade = monster.initialGrade,
                 };
                 await DataProcessor.UpdateUserMonsterCustomDataAsync(context, itemInstance.ItemInstanceId,customData);
