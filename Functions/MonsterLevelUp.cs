@@ -38,7 +38,7 @@ namespace SANGWOO.Function
                 // 何レベになるか計算
                 var levelUpTableList = await DataProcessor.GetMasterAsyncOf<MonsterLevelUpTableMB>(context);
                 var afterExp = userMonster.customData.exp + request.exp;
-                var targetLevelUpTable = levelUpTableList.OrderBy(m => m.id).FirstOrDefault(m => m.totalRequiredExp >= afterExp);
+                var targetLevelUpTable = levelUpTableList.OrderBy(m => m.id).LastOrDefault(m => m.totalRequiredExp <= afterExp);
                 PMApiUtil.ErrorIf(targetLevelUpTable == null, PMErrorCode.Unknown, "invalid levelUpTable");
                 var afterLevel = targetLevelUpTable.level;
 
