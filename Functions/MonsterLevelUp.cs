@@ -74,18 +74,5 @@ namespace SANGWOO.Function
                 return PlayFabSimpleJson.SerializeObject(response);
             }
         }
-
-        // ドロップテーブルから取得するアイテムを抽選
-        private static async Task<string> EvaluateRandomResultTable(FunctionExecutionContext<dynamic> context, dynamic dropTableName)
-        {
-            var serverApi = new PlayFabServerInstanceAPI(context.ApiSettings,context.AuthenticationContext);
-
-            var result = await serverApi.EvaluateRandomResultTableAsync(new EvaluateRandomResultTableRequest()
-            {
-                TableId = dropTableName
-            });
-
-            return result.Result.ResultItemId;
-        }
     }
 }
