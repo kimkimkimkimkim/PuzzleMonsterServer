@@ -15,9 +15,9 @@ using PM.Enum.Data;
 
 namespace SANGWOO.Function
 {
-    public static class UpdateUserMonsterFormationList
+    public static class UpdateUserMonsterFormation
     {
-        [FunctionName("UpdateUserMonsterFormationList")]
+        [FunctionName("UpdateUserMonsterFormation")]
         public static async Task<dynamic> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
@@ -25,7 +25,7 @@ namespace SANGWOO.Function
             try{
                 string body = await req.ReadAsStringAsync();
                 var context = JsonConvert.DeserializeObject<FunctionExecutionContext<dynamic>>(body);
-                var request = JsonConvert.DeserializeObject<FunctionExecutionContext<UpdateUserMonsterFormationListApiRequest>>(body).FunctionArgument;
+                var request = JsonConvert.DeserializeObject<FunctionExecutionContext<UpdateUserMonsterFormationApiRequest>>(body).FunctionArgument;
 
                 var userData = await DataProcessor.GetUserDataAsync(context);
                 var userMonsterPartyList = userData.userMonsterPartyList ?? new List<UserMonsterPartyInfo>();
@@ -34,6 +34,7 @@ namespace SANGWOO.Function
                     // 存在しない場合は新規作成して追加
                     var userMonsterParty = new UserMonsterPartyInfo(){
                         id = UserDataUtil.CreateUserDataId(),
+                        partyId = request.partyId,
                         userMonsterIdList = request.userMonsterIdList,
                     };
                     userMonsterPartyList.Add(userMonsterParty);
@@ -43,7 +44,7 @@ namespace SANGWOO.Function
                 }
                 await DataProcessor.UpdateUserDataAsync(context, new Dictionary<UserDataKey, object>() { {UserDataKey.userMonsterPartyList, userMonsterPartyList} });
 
-                var response = new UpdateUserMonsterFormationListApiResponse(){};
+                var response = new UpdateUserMonsterFormationApiResponse(){};
                 return PlayFabSimpleJson.SerializeObject(response);
             }catch(PMApiException e){
                 // レスポンスの作成
