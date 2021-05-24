@@ -28,8 +28,12 @@ namespace SANGWOO.Function
                 var context = JsonConvert.DeserializeObject<FunctionExecutionContext<dynamic>>(body);
                 var request = JsonConvert.DeserializeObject<FunctionExecutionContext<LoginApiRequest>>(body).FunctionArgument;
 
+                // ログイン日時の更新
                 var now = DateTimeUtil.Now();
                 await DataProcessor.UpdateUserDataAsync(context, new Dictionary<UserDataKey, object>(){ {UserDataKey.lastLoginDateTime, now} });
+
+                // スタミナの更新
+                await StaminaUtil.SetStamina(context);
 
                 var response = new LoginApiResponse(){};
                 return PlayFabSimpleJson.SerializeObject(response);
