@@ -17,7 +17,7 @@ public static class StaminaUtil
         var lastCalculatedStaminaDateTime = userData.lastCalculatedStaminaDateTime;
         var now = DateTimeUtil.Now();
 
-        if(lastCalculatedStaminaDateTime == null){
+        if(lastCalculatedStaminaDateTime == default(DateTime)){
             // 初ログイン時
             var stamina = 10; // TODO : スタミナの初期値
             await DataProcessor.UpdateUserDataAsync(context, new Dictionary<UserDataKey, object>(){
