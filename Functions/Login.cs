@@ -28,6 +28,14 @@ namespace SANGWOO.Function
                 var context = JsonConvert.DeserializeObject<FunctionExecutionContext<dynamic>>(body);
                 var request = JsonConvert.DeserializeObject<FunctionExecutionContext<LoginApiRequest>>(body).FunctionArgument;
 
+                // 初ログイン時処理
+                var userData = await DataProcessor.GetUserDataAsync(context);
+                if(userData.lastLoginDateTime == default(DateTime)){
+                    await DataProcessor.UpdateUserDataAsync(context, new Dictionary<UserDataKey, object>(){
+                        { UserDataKey.rank, 1},
+                    });
+                }
+
                 // ログイン日時の更新
                 var now = DateTimeUtil.Now();
                 await DataProcessor.UpdateUserDataAsync(context, new Dictionary<UserDataKey, object>(){ {UserDataKey.lastLoginDateTime, now} });
